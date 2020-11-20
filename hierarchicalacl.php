@@ -2,7 +2,7 @@
 
 require_once 'hierarchicalacl.civix.php';
 // phpcs:disable
-use CRM_Hierarchicalacl_ExtensionUtil as E;
+use CRM_HierarchicalACL_ExtensionUtil as E;
 // phpcs:enable
 
 /**

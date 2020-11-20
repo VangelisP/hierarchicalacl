@@ -1,12 +1,12 @@
 <?php
 
 // AUTO-GENERATED FILE -- Civix may overwrite any changes made to this file
-use CRM_Hierarchicalacl_ExtensionUtil as E;
+use CRM_HierarchicalACL_ExtensionUtil as E;
 
 /**
  * Base class which provides helpers to execute upgrade logic
  */
-class CRM_Hierarchicalacl_Upgrader_Base {
+class CRM_HierarchicalACL_Upgrader_Base {
 
   /**
    * @var CRM_Hierarchicalacl_Upgrader_Base
@@ -47,7 +47,7 @@ class CRM_Hierarchicalacl_Upgrader_Base {
    */
   public static function instance() {
     if (!self::$instance) {
-      self::$instance = new CRM_Hierarchicalacl_Upgrader(
+      self::$instance = new CRM_HierarchicalACL_Upgrader(
         'hierarchicalacl',
         E::path()
       );

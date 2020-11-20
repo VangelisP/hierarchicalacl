@@ -6,7 +6,7 @@
  * The ExtensionUtil class provides small stubs for accessing resources of this
  * extension.
  */
-class CRM_Hierarchicalacl_ExtensionUtil {
+class CRM_HierarchicalACL_ExtensionUtil {
   const SHORT_NAME = 'hierarchicalacl';
   const LONG_NAME = 'hierarchicalacl';
   const CLASS_PREFIX = 'CRM_Hierarchicalacl';
@@ -209,11 +209,11 @@ function _hierarchicalacl_civix_civicrm_upgrade($op, CRM_Queue_Queue $queue = NU
  * @return CRM_Hierarchicalacl_Upgrader
  */
 function _hierarchicalacl_civix_upgrader() {
-  if (!file_exists(__DIR__ . '/CRM/Hierarchicalacl/Upgrader.php')) {
+  if (!file_exists(__DIR__ . '/CRM/HierarchicalACL/Upgrader.php')) {
     return NULL;
   }
   else {
-    return CRM_Hierarchicalacl_Upgrader_Base::instance();
+    return CRM_HierarchicalACL_Upgrader_Base::instance();
   }
 }
 
