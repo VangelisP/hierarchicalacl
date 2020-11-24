@@ -4,6 +4,7 @@
     <ul>
       <li><strong>Name</strong>: Name to identify the ACL</li>
       <li><strong>Is Active</strong>: Check this to activate the ACL</li>
+      <li><strong>Use Strict Relationship Permissions</strong>: Apply ACL value selected in each relationship permissions (<strong>None</strong> / <strong>View only</strong> / <strong>View and update</strong> ) strictly</li>
       <li>
         <strong>Cache Timeout</strong>: Number in minutes to refresh the hierarchical tree cache when the user access CiviCRM.<br />
         Zero value ("0") means no cache applied

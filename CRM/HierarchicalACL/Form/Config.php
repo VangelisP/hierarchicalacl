@@ -39,7 +39,7 @@ class CRM_HierarchicalACL_Form_Config extends CRM_Core_Form {
           'relationship_types_ids_b_a' => array_keys($relationship_types_b_a),
           'relationship_types_labels_a_b' => array_values($relationship_types_a_b),
           'relationship_types_labels_b_a' => array_values($relationship_types_b_a),
-          'roles' => array_keys(CRM_Core_Config::singleton()->userSystem->getRoleNames())
+          'roles' => array_keys(CRM_Core_Config::singleton()->userSystem->getRoleNames()),
         ],
       ]);
     parent::buildQuickForm();
@@ -62,9 +62,11 @@ class CRM_HierarchicalACL_Form_Config extends CRM_Core_Form {
   public function postProcess() {
     $params = $this->exportValues();
     Civi::settings()->set('hierarchicalacl_config', json_decode($params['config_json'], TRUE));
-    CRM_Core_Session::setStatus(E::ts("Hierarchical ACL configuration has been saved."), ts('Saved'), 'success');
-    parent::postProcess();
+    // ACLs have changed we need to drop tree just in case
+    CRM_HierarchicalACL_BAO_HierarchicalACL::dropTreeTable();
 
+    parent::postProcess();
+    CRM_Core_Session::setStatus(E::ts("Hierarchical ACL configuration has been saved."), ts('Saved'), 'success');
     $url = CRM_Utils_System::url('civicrm/admin');
     CRM_Utils_System::redirect($url);
   }

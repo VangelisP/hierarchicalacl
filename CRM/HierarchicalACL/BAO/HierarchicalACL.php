@@ -67,6 +67,30 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
   }
 
   /**
+   * Truncate the Hierarchicalacl Tree and Cache
+   *
+   * @param array $cids
+   *
+   * @return void
+   */
+  public static function dropTreeTable($cids = []) {
+    if (!empty($cids)) {
+      $where = " WHERE contact_id IN (" . explode(",", $cids) . ") ";
+      $sql = "DELETE FROM `civicrm_hierarchicalacl_tree_cache` " . $where;
+      CRM_Core_DAO::executeQuery($sql);
+      $sql = "DELETE FROM `civicrm_hierarchicalacl_tree` " . $where;
+      CRM_Core_DAO::executeQuery($sql);
+    }
+    else {
+      $sql = "TRUNCATE TABLE `civicrm_hierarchicalacl_tree_cache` ";
+      CRM_Core_DAO::executeQuery($sql);
+      $sql = "TRUNCATE TABLE `civicrm_hierarchicalacl_tree` ";
+      CRM_Core_DAO::executeQuery($sql);
+    }
+
+  }
+
+  /**
    * Creates the Hierarchicalacl Tree for a given user
    *
    * @param int $contactID
@@ -100,33 +124,33 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
           // Insert depth 0, the logged in user
           $sql = "
           INSERT INTO `civicrm_hierarchicalacl_tree`
-            (`hierarchicalacl_id`, `depth`, `contact_id`, `contact_id_a`, `relationship_type_id`)
+            (`hierarchicalacl_id`, `depth`, `contact_id`, `contact_id_a`, `relationship_type_id`, `is_permission_a_b`)
           VALUES
-            ({$acl_id}, {$depth}, {$contactID}, {$contactID}, NULL)";
+            ({$acl_id}, {$depth}, {$contactID}, {$contactID}, NULL, " . CRM_Core_Permission::EDIT . ")";
           CRM_Core_DAO::executeQuery($sql);
 
           // Build the Hierarchical Contact tree based on the relationships acl
           foreach ($acl["hierarchy"] as $relationship) {
             $depth++;
             $sql = "INSERT INTO `civicrm_hierarchicalacl_tree`
-              (`hierarchicalacl_id`, `depth`, `contact_id`, `contact_id_a`, `relationship_type_id`)
+              (`hierarchicalacl_id`, `depth`, `contact_id`, `contact_id_a`, `relationship_type_id`, `is_permission_a_b`)
               SELECT DISTINCT
                 {$acl_id},
                 {$depth},
                 {$contactID},
                 rel.`contact_id_b`,
-                " . (empty($relationship['relationship_type_id_contacts']) ? 'NULL' : $relationship['relationship_type_id_contacts']) . "
+                " . (empty($relationship['relationship_type_id_contacts']) ? 'NULL' : $relationship['relationship_type_id_contacts']) . ",
+                rel.`is_permission_a_b`
               FROM `civicrm_hierarchicalacl_tree` tree
               INNER JOIN `civicrm_relationship` rel
                 ON rel.`contact_id_a` = tree.`contact_id_a`
-                  AND tree.`depth` = " . ($depth - 1) . "
                   AND rel.`relationship_type_id` = " . $relationship['relationship_type_id_hierarchy'] . "
               WHERE tree.`contact_id` = {$contactID}
+                AND tree.`depth` = " . ($depth - 1) . "
                 AND tree.`hierarchicalacl_id`= {$acl_id}
                 AND rel.`is_active` = 1
                 AND (rel.`start_date` IS NULL OR rel.`start_date` <= '{$now}' )
-                AND (rel.`end_date` IS NULL OR rel.`end_date` >= '{$now}')
-            ";
+                AND (rel.`end_date` IS NULL OR rel.`end_date` >= '{$now}')";
             CRM_Core_DAO::executeQuery($sql);
           }
 
@@ -145,9 +169,9 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
    * @param int $contactID
    * @return string
    */
-  public static function createPermissionsTable($contactID) {
-    if (!empty(self::$permsTables[$contactID])) {
-      return self::$permsTables[$contactID];
+  public static function createPermissionsTable($contactID, $type, $acls) {
+    if (!empty(self::$permsTables[$contactID][$type])) {
+      return self::$permsTables[$contactID][$type];
     }
     else {
       $tmpTable = CRM_Utils_SQL_TempTable::build()->setCategory('hacl')->setMemory();
@@ -156,21 +180,36 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
       $tmpTable->createWithColumns('`contact_id` INT(10) NOT NULL, PRIMARY KEY (`contact_id`)');
       $now = date('Y-m-d');
 
-      // Get all Contacts related with the hierarchical tree
-      $sql = "
-      INSERT INTO {$tmpTableName}
-      SELECT
-        DISTINCT rel.`contact_id_b`
-      FROM `civicrm_hierarchicalacl_tree` tree
-      INNER JOIN `civicrm_relationship` rel
-        ON rel.`contact_id_a` = tree.`contact_id_a`
-        AND rel.`relationship_type_id` = tree.`relationship_type_id`
-      WHERE
-        tree.`contact_id` = {$contactID}
-        AND rel.`is_active` = 1
-        AND (rel.`start_date` IS NULL OR rel.`start_date` <= '{$now}' )
-        AND (rel.`end_date` IS NULL OR rel.`end_date` >= '{$now}')";
-      CRM_Core_DAO::executeQuery($sql);
+      foreach ($acls as $acl_id => $acl) {
+        if (!empty($acl["use_relationship_perms"])) {
+          if ($type == CRM_Core_Permission::VIEW) {
+            $permissionClause = " IN ( " . CRM_Core_Permission::EDIT . " , " . CRM_Core_Permission::VIEW . " ) ";
+          }
+          else {
+            $permissionClause = " = " . CRM_Core_Permission::EDIT;
+          }
+          $relClause = " AND rel.`is_permission_a_b` " . $permissionClause;
+          $treeClause = " AND tree.`is_permission_a_b` " . $permissionClause;
+        }
+
+        // Get all Contacts related with the hierarchical tree
+        $sql = "
+        INSERT INTO {$tmpTableName}
+        SELECT
+          DISTINCT rel.`contact_id_b`
+        FROM `civicrm_hierarchicalacl_tree` tree
+        INNER JOIN `civicrm_relationship` rel
+          ON rel.`contact_id_a` = tree.`contact_id_a`
+          AND rel.`relationship_type_id` = tree.`relationship_type_id`
+        WHERE
+          tree.`contact_id` = {$contactID}
+          AND tree.`hierarchicalacl_id`= {$acl_id}
+          AND rel.`is_active` = 1
+          AND (rel.`start_date` IS NULL OR rel.`start_date` <= '{$now}' )
+          AND (rel.`end_date` IS NULL OR rel.`end_date` >= '{$now}')
+        " . $relClause;
+        CRM_Core_DAO::executeQuery($sql);
+      }
 
       // Add the Tree Contacts
       $sql = "
@@ -179,10 +218,11 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
         `contact_id_a`
       FROM `civicrm_hierarchicalacl_tree` tree
       WHERE
-        tree.`contact_id` = {$contactID}";
+        tree.`contact_id` = {$contactID}
+      " . $treeClause;
       CRM_Core_DAO::executeQuery($sql);
 
-      self::$permsTables[$contactID] = $tmpTableName;
+      self::$permsTables[$contactID][$type] = $tmpTableName;
       return $tmpTableName;
     }
   }

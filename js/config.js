@@ -1,4 +1,10 @@
 CRM.$(document).ready(function(){
+  window.JSONEditor.defaults.callbacks.template = {
+    arrayIndex: function(jseditor, e) {
+      return jseditor.parent.key*1+1;
+    }
+  };
+
   var starting_value;
   if (CRM.vars.HierarchicalACL.config_json != ""){
     var starting_value = JSON.parse(CRM.vars.HierarchicalACL.config_json);
@@ -24,6 +30,7 @@ CRM.$(document).ready(function(){
         "required": [
         "name",
         "is_active",
+        "use_relationship_perms",
         "cache_timeout",
         "hierarchy",
         "roles"
@@ -38,6 +45,11 @@ CRM.$(document).ready(function(){
             "type": "boolean",
             "format": "checkbox",
             "title": "Is Active?"
+          },
+          "use_relationship_perms": {
+            "type": "boolean",
+            "format": "checkbox",
+            "title": "Use Strict Relationship Permissions"
           },
           "cache_timeout": {
             "type": "integer",
@@ -100,12 +112,6 @@ CRM.$(document).ready(function(){
   }
   var container = document.getElementById('jsoneditor');
   var editor = new JSONEditor(container, options);
-
-  window.JSONEditor.defaults.callbacks.template = {
-    arrayIndex: function(jseditor, e) {
-      return jseditor.parent.key*1+1;
-    }
-  };
 
   editor.on('change',function() {
     CRM.$("#config_json").val(JSON.stringify(editor.getValue(), null, 2));

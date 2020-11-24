@@ -18,7 +18,7 @@ function hierarchicalacl_civicrm_aclWhereClause($type, &$tables, &$whereTables, 
   if (!CRM_Core_Permission::check('edit all contacts')) {
     $acls = CRM_HierarchicalACL_BAO_HierarchicalACL::getHierarchicalACLs();
     CRM_HierarchicalACL_BAO_HierarchicalACL::createTreeTable($contactID, $type, $acls);
-    $tmpPermsTableName = CRM_HierarchicalACL_BAO_HierarchicalACL::createPermissionsTable($contactID);
+    $tmpPermsTableName = CRM_HierarchicalACL_BAO_HierarchicalACL::createPermissionsTable($contactID, $type, $acls);
 
     // Do not add in the permission table if there's no contacts to add
     $check = CRM_Core_DAO::singleValueQuery("SELECT count(contact_id) as contact_count FROM {$tmpPermsTableName}");

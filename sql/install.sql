@@ -1,10 +1,11 @@
 CREATE TABLE `civicrm_hierarchicalacl_tree` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `hierarchicalacl_id` int(10) unsigned NOT NULL,
-  `depth` smallint(5) unsigned NOT NULL,
-  `contact_id` int(10) unsigned NOT NULL,
-  `contact_id_a` int(10) unsigned NOT NULL,
-  `relationship_type_id` int(10) unsigned DEFAULT NULL,
+  `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `hierarchicalacl_id` INT(10) UNSIGNED NOT NULL,
+  `depth` SMALLINT(5) UNSIGNED NOT NULL,
+  `contact_id` INT(10) UNSIGNED NOT NULL,
+  `contact_id_a` INT(10) UNSIGNED NOT NULL,
+  `relationship_type_id` INT(10) UNSIGNED DEFAULT NULL,
+  `is_permission_a_b` INT(10) UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
   KEY `contact_id` (`contact_id`),
   KEY `contact_id_a` (`contact_id_a`),
@@ -15,9 +16,9 @@ CREATE TABLE `civicrm_hierarchicalacl_tree` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `civicrm_hierarchicalacl_tree_cache` (
-  `contact_id` int(10) unsigned NOT NULL,
-  `hierarchicalacl_id` int(10) NOT NULL,
-  `cache_date` timestamp NULL DEFAULT NULL,
+  `contact_id` INT(10) UNSIGNED NOT NULL,
+  `hierarchicalacl_id` INT(10) NOT NULL,
+  `cache_date` TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (`contact_id`),
   CONSTRAINT `civicrm_hierarchicalacl_tree_cache_ibfk_1` FOREIGN KEY (`contact_id`) REFERENCES `civicrm_contact` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
