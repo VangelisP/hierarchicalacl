@@ -52,7 +52,7 @@ class CRM_HierarchicalACL_Form_Config extends CRM_Core_Form {
       $config_json = json_encode($config_json);
     }
     else {
-      $config_json = '';
+      $config_json = '{}';
     }
     CRM_Core_Resources::singleton()->addVars('HierarchicalACL', ['config_json' => $config_json]);
 
