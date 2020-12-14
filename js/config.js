@@ -38,6 +38,7 @@ CRM.$(document).ready(function(){
         "properties": {
           "name": {
             "type": "string",
+            "title": "Name",
             "minLength": 3,
             "default": "Hierarchical ACL"
           },
@@ -58,7 +59,7 @@ CRM.$(document).ready(function(){
           "hierarchy": {
             "type": "array",
             "format": "table",
-            "title": " ",
+            "title": "ACL Hierarchy",
             "items": {
               "type": "object",
               "title": "Relationships",

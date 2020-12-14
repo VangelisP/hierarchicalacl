@@ -1,10 +1,10 @@
 # Hierarchical ACL
 
-This extension implements custom [ACLs](https://docs.civicrm.org/user/en/latest/initial-set-up/permissions-and-access-control/), using a Hierarchical structure based on relationships among Contacts.
+This extension implements custom [ACLs](https://docs.civicrm.org/user/en/latest/initial-set-up/permissions-and-access-control/), using a Hierarchical structure based on relationships among Contacts.  
 CiviCRM provides ACLs feature to restrict/grant access to view/edit contacts based on Groups, which is good, but limited for those Organizations that have a Hierarchical structure,
 and their users need to have limited access only to the Contacts that are part of their inner structure.
 Native CiviCRM ACLs rely on the fact that groups of Contacts (CiviCRM users) need to be created and assigned ACL to another target group of Contacts to have access to. This
-is very time-consuming for Organizations that have a more complex constitution. Plus it has to be manually created, and doesn't have to option to apply *dynamic* permissions to any user based on certain conditions.  
+is very time-consuming for Organizations that have a more complex constitution. Plus it has to be manually created, and doesn't have the option to apply *dynamic* permissions to any user based on certain conditions.  
   
 In the other hand, there are some developed extensions, like [nz.co.fuzion.relatedpermissions](https://github.com/eileenmcnaughton/nz.co.fuzion.relatedpermissions), that provides permissions through relationships, but it inherits only 1-level hierarchy.  
 
