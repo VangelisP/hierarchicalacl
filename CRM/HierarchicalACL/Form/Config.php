@@ -26,7 +26,7 @@ class CRM_HierarchicalACL_Form_Config extends CRM_Core_Form {
       $relationship_types_a_b[$relationshipType['id']] = $relationshipType['label_a_b'];
       $relationship_types_b_a[$relationshipType['id']] = $relationshipType['label_b_a'];
     }
-    $relationship_types_a_b = array_merge([0 => E::ts("-- Restrict Access --")], $relationship_types_a_b);
+    $relationship_types_a_b = [0 => E::ts("-- Restrict Access --")] + $relationship_types_a_b;
 
     CRM_Core_Resources::singleton()
       ->addScriptUrl('https://cdn.jsdelivr.net/npm/@json-editor/json-editor@2.5.1/dist/jsoneditor.min.js')
