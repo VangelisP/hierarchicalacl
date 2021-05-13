@@ -12,7 +12,7 @@
       <li><strong>Relationships</strong>: Add the Hierarchical Levels of ACLs based on Relationship Type
         <ul>
           <li><strong>Parent Level Relationship Type</strong>: Select the Relationship Type that connects Contacts of upper level, to this level</li>
-          <li><strong>Contacts' Relationship Type</strong>: Select the Relationship Type that connects Contatcs to be accessed with COntacts in this level</li>
+          <li><strong>Contacts' Relationship Type</strong>: Select the Relationship Type that connects Contacts to be accessed with Contacts in this level</li>
         </ul>
       </li>
       <li><strong>Roles</strong>: Apply this ACL to specific roles.</li>

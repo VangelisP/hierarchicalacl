@@ -8,17 +8,26 @@ use CRM_HierarchicalACL_ExtensionUtil as E;
  * @see https://docs.civicrm.org/dev/en/latest/framework/quickform/
  */
 class CRM_HierarchicalACL_Form_Config extends CRM_Core_Form {
+  protected $_cleancacheButtonName;
 
   public function buildQuickForm() {
     CRM_Utils_System::setTitle(E::ts('HierarchicalACL config'));
-    $this->addElement('hidden', 'config_json', NULL, array('id' => 'config_json'));
-    $this->addButtons(array(
-      array(
+    $this->_cleancacheButtonName = $this->getButtonName('next', 'cleanup');
+    $this->addElement('hidden', 'config_json', NULL, ['id' => 'config_json']);
+    $this->addButtons([
+      [
+        'type' => 'next',
+        'name' => ts('Cleanup Caches'),
+        'subName' => 'cleanup',
+        'icon' => 'fa-undo',
+
+      ],
+      [
         'type' => 'submit',
         'name' => E::ts('Save'),
         'isDefault' => TRUE,
-      ),
-    ));
+      ],
+    ]);
 
     $relationship_types_a_b = [];
     $relationship_types_b_a = [];
@@ -61,13 +70,22 @@ class CRM_HierarchicalACL_Form_Config extends CRM_Core_Form {
 
   public function postProcess() {
     $params = $this->exportValues();
-    Civi::settings()->set('hierarchicalacl_config', json_decode($params['config_json'], TRUE));
-    // ACLs have changed we need to drop tree just in case
-    CRM_HierarchicalACL_BAO_HierarchicalACL::dropTreeTable();
+    $buttonName = $this->controller->getButtonName();
+    // check if cleanup button
+    if ($buttonName == $this->_cleancacheButtonName) {
+      $sql = "TRUNCATE TABLE `civicrm_hierarchicalacl_tree_cache` ";
+      CRM_Core_DAO::executeQuery($sql);
+      CRM_Core_Session::setStatus(E::ts("Hierarchical ACL Cache has been cleaned up!"), ts('Saved'), 'success');
+    }
+    else {
+      Civi::settings()->set('hierarchicalacl_config', json_decode($params['config_json'], TRUE));
+      // ACLs have changed we need to drop tree just in case
+      CRM_HierarchicalACL_BAO_HierarchicalACL::dropTreeTable();
 
-    parent::postProcess();
-    CRM_Core_Session::setStatus(E::ts("Hierarchical ACL configuration has been saved."), ts('Saved'), 'success');
-    $url = CRM_Utils_System::url('civicrm/admin');
+      parent::postProcess();
+      CRM_Core_Session::setStatus(E::ts("Hierarchical ACL configuration has been saved."), ts('Saved'), 'success');
+    }
+    $url = CRM_Utils_System::url('civicrm/admin/hierarchicalacl/config?reset=1', 'reset=1');
     CRM_Utils_System::redirect($url);
   }
 
