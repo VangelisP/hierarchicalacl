@@ -73,8 +73,7 @@ class CRM_HierarchicalACL_Form_Config extends CRM_Core_Form {
     $buttonName = $this->controller->getButtonName();
     // check if cleanup button
     if ($buttonName == $this->_cleancacheButtonName) {
-      $sql = "TRUNCATE TABLE `civicrm_hierarchicalacl_tree_cache` ";
-      CRM_Core_DAO::executeQuery($sql);
+      CRM_HierarchicalACL_BAO_HierarchicalACL::dropTreeTable();
       CRM_Core_Session::setStatus(E::ts("Hierarchical ACL Cache has been cleaned up!"), ts('Saved'), 'success');
     }
     else {
