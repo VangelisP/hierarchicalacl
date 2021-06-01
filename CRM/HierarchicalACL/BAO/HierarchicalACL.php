@@ -47,7 +47,7 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
         `civicrm_hierarchicalacl_tree_cache`
       WHERE `hierarchicalacl_id` = {$acl_id}
         AND `contact_id` = {$contactID}
-        AND `cache_date` < '{$timeout}'";
+        AND `cache_date` > '{$timeout}'";
 
       // if the query does not return the contact_id, it means the acl tree needs refresh
       $value = CRM_Core_DAO::singleValueQuery($query, []);
