@@ -16,16 +16,16 @@ class CRM_HierarchicalACL_Form_Config extends CRM_Core_Form {
     $this->addElement('hidden', 'config_json', NULL, ['id' => 'config_json']);
     $this->addButtons([
       [
+        'type' => 'submit',
+        'name' => E::ts('Save'),
+        'isDefault' => TRUE,
+      ],
+      [
         'type' => 'next',
         'name' => ts('Cleanup Caches'),
         'subName' => 'cleanup',
         'icon' => 'fa-undo',
 
-      ],
-      [
-        'type' => 'submit',
-        'name' => E::ts('Save'),
-        'isDefault' => TRUE,
       ],
     ]);
 
