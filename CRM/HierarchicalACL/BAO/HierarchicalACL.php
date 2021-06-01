@@ -12,9 +12,14 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
    *
    * @return array
    */
-  public static function getHierarchicalACLs() {
+  public static function getHierarchicalACLs($acl_ids = []) {
     if (!isset(self::$config)) {
       self::$config = Civi::settings()->get('hierarchicalacl_config');
+    }
+
+    // return some acls (for reports)
+    if (!empty($acl_ids)) {
+      return array_intersect_key(self::$config, array_flip($acl_ids));
     }
 
     return self::$config;
@@ -42,7 +47,7 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
         `civicrm_hierarchicalacl_tree_cache`
       WHERE `hierarchicalacl_id` = {$acl_id}
         AND `contact_id` = {$contactID}
-        AND `cache_date` < '{$timeout}'";
+        AND `cache_date` > '{$timeout}'";
 
       // if the query does not return the contact_id, it means the acl tree needs refresh
       $value = CRM_Core_DAO::singleValueQuery($query, []);
@@ -88,6 +93,8 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
       CRM_Core_DAO::executeQuery($sql);
     }
 
+    // reset ACL cache
+    CRM_ACL_BAO_Cache::resetCache();
   }
 
   /**
@@ -96,9 +103,10 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
    * @param int $contactID
    * @param int $type
    * @param array $acls
+   * @param bool $skipRoleCheck
    * @return bool
    */
-  public static function createTreeTable($contactID, $type, $acls) {
+  public static function createTreeTable($contactID, $type, $acls, $skipRoleCheck = FALSE) {
     if (self::$treeTable[$contactID]) {
       return TRUE;
     }
@@ -108,7 +116,7 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
         if (!$acl['is_active']) {
           continue;
         }
-        if (!empty($acl['roles']) && !CRM_Core_Permission::checkGroupRole($acl['roles'])) {
+        if (!$skipRoleCheck && !empty($acl['roles']) && !CRM_Core_Permission::checkGroupRole($acl['roles'])) {
           continue;
         }
 
@@ -167,20 +175,34 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
    * Creates permissions table with Contacts allowed to access
    *
    * @param int $contactID
+   * @param int $type
+   * @param array $acls
+   * @param bool $keepAclFields
    * @return string
    */
-  public static function createPermissionsTable($contactID, $type, $acls) {
+  public static function createPermissionsTable($contactID, $type, $acls, $keepAclFields = FALSE) {
     if (!empty(self::$permsTables[$contactID][$type])) {
       return self::$permsTables[$contactID][$type];
     }
     else {
+      $tmpFields = [
+        "`id` INT UNSIGNED NOT NULL AUTO_INCREMENT",
+        "`contact_id` INT UNSIGNED NOT NULL",
+      ];
+      if ($keepAclFields) {
+        $tmpFields[] = "`hierarchicalacl_id` INT(10) UNSIGNED NOT NULL";
+        $tmpFields[] = "`depth` SMALLINT(5) UNSIGNED NOT NULL";
+      }
+      $tmpFields[] = "PRIMARY KEY (`id`)";
+
       $tmpTable = CRM_Utils_SQL_TempTable::build()->setCategory('hacl')->setMemory();
       $tmpTableName = $tmpTable->getName();
       $tmpTable->drop();
-      $tmpTable->createWithColumns('`contact_id` INT(10) NOT NULL, PRIMARY KEY (`contact_id`)');
+      $tmpTable->createWithColumns(implode(",", $tmpFields));
       $now = date('Y-m-d');
 
       foreach ($acls as $acl_id => $acl) {
+        // Use strict relationship permissions condition
         if (!empty($acl["use_relationship_perms"])) {
           if ($type == CRM_Core_Permission::VIEW) {
             $permissionClause = " IN ( " . CRM_Core_Permission::EDIT . " , " . CRM_Core_Permission::VIEW . " ) ";
@@ -192,11 +214,22 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
           $treeClause = " AND tree.`is_permission_a_b` " . $permissionClause;
         }
 
+        $sqlSelectFields = ["DISTINCT rel.`contact_id_b`"];
+        $sqlInsertFields = ["`contact_id`"];
+        if ($keepAclFields) {
+          $sqlSelectFields[] = $acl_id;
+          $sqlSelectFields[] = "`tree`.`depth`";
+
+          $sqlInsertFields[] = "`hierarchicalacl_id`";
+          $sqlInsertFields[] = "`depth`";
+        }
+
         // Get all Contacts related with the hierarchical tree
         $sql = "
         INSERT INTO {$tmpTableName}
+          (" . implode(",", $sqlInsertFields) . ")
         SELECT
-          DISTINCT rel.`contact_id_b`
+          " . implode(",", $sqlSelectFields) . "
         FROM `civicrm_hierarchicalacl_tree` tree
         INNER JOIN `civicrm_relationship` rel
           ON rel.`contact_id_a` = tree.`contact_id_a`
@@ -212,10 +245,12 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
       }
 
       // Add the Tree Contacts
+      $sqlSelectFields[0] = "DISTINCT tree.`contact_id_a`";
       $sql = "
-      REPLACE INTO {$tmpTableName}
+      INSERT INTO {$tmpTableName}
+        (" . implode(",", $sqlInsertFields) . ")
       SELECT
-        `contact_id_a`
+        " . implode(",", $sqlSelectFields) . "
       FROM `civicrm_hierarchicalacl_tree` tree
       WHERE
         tree.`contact_id` = {$contactID}
