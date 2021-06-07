@@ -60,14 +60,13 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
    *
    * @param int $contactID
    * @param int $acl_id
+   * @param int $date
    * @return void
    */
-  public static function refreshTreeCache($contactID, $acl_id) {
-    $sql = "
-    REPLACE INTO `civicrm_hierarchicalacl_tree_cache`
-      (`contact_id`, `hierarchicalacl_id`, `cache_date`)
-    VALUES
-      ({$contactID}, {$acl_id}, NOW())";
+  public static function refreshTreeCache($contactID, $acl_id, $date) {
+    $sql = "DELETE FROM `civicrm_hierarchicalacl_tree_cache` WHERE contact_id = {$contactID} AND `hierarchicalacl_id` = {$acl_id};";
+    CRM_Core_DAO::executeQuery($sql);
+    $sql = "INSERT INTO `civicrm_hierarchicalacl_tree_cache` (`contact_id`, `hierarchicalacl_id`, `cache_date`) VALUES ({$contactID}, {$acl_id}, '{$date}')";
     CRM_Core_DAO::executeQuery($sql);
   }
 
@@ -111,7 +110,7 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
       return TRUE;
     }
     else {
-      $now = date('Y-m-d');
+      $now = date('YmdHis');
       foreach ($acls as $acl_id => $acl) {
         if (!$acl['is_active']) {
           continue;
@@ -163,7 +162,7 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
           }
 
           // Updates cache timestamp
-          self::refreshTreeCache($contactID, $acl_id);
+          self::refreshTreeCache($contactID, $acl_id, $now);
         }
       }
       self::$treeTable[$contactID] = TRUE;
@@ -193,13 +192,13 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
         $tmpFields[] = "`hierarchicalacl_id` INT(10) UNSIGNED NOT NULL";
         $tmpFields[] = "`depth` SMALLINT(5) UNSIGNED NOT NULL";
       }
-      $tmpFields[] = "PRIMARY KEY (`id`)";
+      $tmpFields[] = "PRIMARY KEY (`id`), INDEX UI_contact (contact_id)";
 
       $tmpTable = CRM_Utils_SQL_TempTable::build()->setCategory('hacl')->setMemory();
       $tmpTableName = $tmpTable->getName();
       $tmpTable->drop();
       $tmpTable->createWithColumns(implode(",", $tmpFields));
-      $now = date('Y-m-d');
+      $now = date('YmdHis');
 
       foreach ($acls as $acl_id => $acl) {
         // Use strict relationship permissions condition
