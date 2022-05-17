@@ -1,0 +1,5 @@
+{
+    "name": "civicrm/hierarchicalacl",
+    "description": "Hierarchical ACL - Add ACL based on a Relationships Hierarchical Structure",
+    "type": "civicrm-extension"
+}
