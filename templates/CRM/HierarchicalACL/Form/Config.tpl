@@ -21,17 +21,6 @@
   </div>
 </div>
 
-<div class="crm-section">
-  <div class="crm-section">
-    <div id="jsoneditor" style="width: 90%; min-height: 200px;"></div>
-    <div class="clear"></div>
-  </div>
-  <div align="right">
-    <font size="-2" color="gray">
-      Powered by <a href="https://github.com/json-editor/json-editor">JSON editor</a>.
-    </font>
-  </div>
-</div>
-{$form.config_json.html}
+{include file="CRM/Jsoneditor/Jsoneditor.tpl"}
 
 {include file="CRM/common/formButtons.tpl" location="bottom"}

@@ -114,6 +114,17 @@ class CRM_HierarchicalACL_Form_Report_Detail extends CRM_Report_Form {
             'title' => ts('Depth'),
             'type' => CRM_Utils_Type::T_INT,
           ],
+          'type' => [
+            'title' => ts('Type of Permission'),
+            'operatorType' => CRM_Report_Form::OP_SELECT,
+            'options' => [
+              CRM_Core_Permission::EDIT => ts('Edit Contacts'),
+              CRM_Core_Permission::VIEW => ts('View Contacts'),
+            ],
+            'default' => CRM_Core_Permission::EDIT,
+            'type' => CRM_Utils_Type::T_INT,
+            'pseudofield' => TRUE,
+          ],
         ],
       ],
     ];
@@ -142,6 +153,7 @@ class CRM_HierarchicalACL_Form_Report_Detail extends CRM_Report_Form {
   public function beginPostProcessCommon() {
     $contactID = $this->_params['contact_id_value'];
     $aclsID = $this->_params['hierarchicalacl_id_value'];
+    $type = $this->_params['type_value'];
     $acls = CRM_HierarchicalACL_BAO_HierarchicalACL::getHierarchicalACLs($aclsID);
     CRM_HierarchicalACL_BAO_HierarchicalACL::createTreeTable($contactID, NULL, $acls, TRUE);
     $this->_tmpPermsTableName = CRM_HierarchicalACL_BAO_HierarchicalACL::createPermissionsTable($contactID, $type, $acls, TRUE);

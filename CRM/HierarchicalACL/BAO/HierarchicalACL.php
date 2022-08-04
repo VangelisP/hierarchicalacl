@@ -14,7 +14,7 @@ class CRM_HierarchicalACL_BAO_HierarchicalACL {
    */
   public static function getHierarchicalACLs($acl_ids = []) {
     if (!isset(self::$config)) {
-      self::$config = Civi::settings()->get('hierarchicalacl_config');
+      self::$config = \Civi\Jsoneditor\Jsoneditor::getSetting('hierarchicalacl', 'json');
     }
 
     // return some acls (for reports)
