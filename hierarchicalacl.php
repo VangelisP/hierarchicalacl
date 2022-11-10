@@ -36,6 +36,13 @@ function hierarchicalacl_civicrm_aclWhereClause($type, &$tables, &$whereTables, 
   }
 }
 
+// Adds aggressive cache clearing, ie. whenever a relationship is being modified
+function hierarchicalacl_civicrm_post(string $op, string $objectName, int $objectId, &$objectRef) {
+  if ($objectName == 'Relationship') {
+    CRM_HierarchicalACL_BAO_HierarchicalACL::dropTreeTable();
+  }
+}
+
 /**
  * Implements hook_civicrm_navigationMenu().
  *
